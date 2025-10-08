@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login Usuario</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .login-container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      width: 350px;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .mensaje {
+      margin-top: 15px;
+      font-size: 14px;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Login de Usuario</h2>
+    <form id="formLogin">
+      <input type="text" id="codigoLogin" placeholder="Ingrese su código único" required />
+      <button type="submit">Ingresar</button>
+    </form>
+    <div class="mensaje" id="mensaje"></div>
+  </div>
+
+  <script>
+    const LOGIN_URL = "/login";
+    const formLogin = document.getElementById("formLogin");
+    const mensaje = document.getElementById("mensaje");
+
+    formLogin.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const codigo = document.getElementById("codigoLogin").value.trim();
+
+      if (!codigo) {
+        mensaje.textContent = "Por favor ingresa tu código único.";
+        return;
+      }
+
+      try {
+        const res = await fetch(LOGIN_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ codigo })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          mensaje.textContent = data.error || "Error al iniciar sesión.";
+          return;
+        }
+
+        // Guardar datos del usuario en localStorage
+        localStorage.setItem("usuario", JSON.stringify(data));
+
+        // Redirigir al dashboard
+        window.location.href = "dashboard.html";
+      } catch (err) {
+        console.error("Error de conexión:", err);
+        mensaje.textContent = "No se pudo conectar con el servidor.";
+      }
+    });
+  </script>
+
+</body>
+</html>

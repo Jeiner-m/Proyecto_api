@@ -1,0 +1,20 @@
+{
+  "name": "rest_api",
+  "version": "1.0.0",
+  "description": "API Express con SQLite para control de asistencia",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "keywords": ["express", "sqlite3", "api", "asistencia"],
+  "author": "Chatp",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  }
+}

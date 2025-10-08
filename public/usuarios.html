@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CRUD Usuarios</title>
+  <style>
+    body { font-family: Arial; background: #f3f3f3; padding: 20px; }
+    h2, h3 { color: #333; }
+    form { background: white; padding: 15px; border-radius: 10px; max-width: 400px; margin-bottom: 20px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+    input, button { width: 100%; padding: 8px; margin: 5px 0; border-radius: 5px; }
+    button { background: #007bff; color: white; border: none; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    table { border-collapse: collapse; width: 100%; background: white; margin-top: 10px; }
+    th, td { padding: 8px; border: 1px solid #ddd; text-align: left; }
+    tr:hover { background-color: #f1f1f1; cursor: pointer; }
+    .mensaje { background: #d4edda; border: 1px solid #c3e6cb; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    #btnVolver { margin-bottom: 15px; background: #555; }
+    #btnVolver:hover { background: #333; }
+  </style>
+</head>
+<body>
+  <h2>Gestión de Usuarios</h2>
+  <button id="btnVolver">Volver al Dashboard</button>
+
+  <form id="formUsuario">
+    <input type="hidden" id="id" />
+    <label>Nombre:</label>
+    <input type="text" id="nombre" required />
+    <label>Oficina:</label>
+    <input type="text" id="oficina" required />
+    <div style="margin-top: 10px;">
+      <button type="submit">Agregar</button>
+      <button type="button" id="btnActualizar">Actualizar</button>
+      <button type="button" id="btnEliminar">Eliminar</button>
+      <button type="button" id="btnNuevo">Nuevo</button>
+    </div>
+  </form>
+
+  <div id="mensaje"></div>
+
+  <h3>Usuarios registrados</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Oficina</th>
+        <th>Código</th>
+      </tr>
+    </thead>
+    <tbody id="tablaUsuarios"></tbody>
+  </table>
+
+  <script>
+    // Verificar sesión
+    const USUARIO = JSON.parse(localStorage.getItem("usuario"));
+    if (!USUARIO) window.location.href = "index.html";
+
+    const API_URL = "http://localhost:3000/usuarios";
+    const form = document.getElementById("formUsuario");
+    const tabla = document.getElementById("tablaUsuarios");
+    const mensajeDiv = document.getElementById("mensaje");
+    const btnVolver = document.getElementById("btnVolver");
+
+    btnVolver.addEventListener("click", () => window.location.href = "dashboard.html");
+
+    function mostrarMensaje(msg) {
+      mensajeDiv.textContent = msg;
+      mensajeDiv.className = "mensaje";
+      setTimeout(() => { mensajeDiv.textContent = ""; mensajeDiv.className = ""; }, 3000);
+    }
+
+    // Cargar todos los usuarios
+    async function cargarUsuarios() {
+      try {
+        const res = await fetch(API_URL);
+        const datos = await res.json();
+        tabla.innerHTML = "";
+        datos.forEach(u => {
+          const row = document.createElement("tr");
+          row.innerHTML = `<td>${u.id_usuarios}</td><td>${u.nombre}</td><td>${u.oficina}</td><td>${u.codigo}</td>`;
+          row.addEventListener("click", () => seleccionar(u.id_usuarios, u.nombre, u.oficina, u.codigo));
+          tabla.appendChild(row);
+        });
+      } catch (err) {
+        console.error("Error al cargar usuarios:", err);
+        tabla.innerHTML = "<tr><td colspan='4'>No se pudieron cargar los usuarios</td></tr>";
+      }
+    }
+
+    // Seleccionar fila
+    function seleccionar(id, nombre, oficina, codigo) {
+      document.getElementById("id").value = id;
+      document.getElementById("nombre").value = nombre;
+      document.getElementById("oficina").value = oficina;
+    }
+
+    // Agregar usuario
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const nombre = document.getElementById("nombre").value;
+      const oficina = document.getElementById("oficina").value;
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre, oficina })
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.error);
+        mostrarMensaje("Usuario agregado correctamente");
+        form.reset();
+        cargarUsuarios();
+      } catch (err) {
+        console.error(err);
+        alert("Error al agregar usuario");
+      }
+    });
+
+    // Actualizar usuario
+    document.getElementById("btnActualizar").addEventListener("click", async () => {
+      const id = document.getElementById("id").value;
+      if (!id) return alert("Selecciona un usuario para actualizar");
+      const nombre = document.getElementById("nombre").value;
+      const oficina = document.getElementById("oficina").value;
+
+      try {
+        const res = await fetch(`${API_URL}/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nombre, oficina })
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.error);
+        mostrarMensaje("Usuario actualizado correctamente");
+        form.reset();
+        cargarUsuarios();
+      } catch (err) {
+        console.error(err);
+        alert("Error al actualizar usuario");
+      }
+    });
+
+    // Eliminar usuario
+    document.getElementById("btnEliminar").addEventListener("click", async () => {
+      const id = document.getElementById("id").value;
+      if (!id) return alert("Selecciona un usuario para eliminar");
+
+      try {
+        const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+        const data = await res.json();
+        if (!res.ok) return alert(data.error);
+        mostrarMensaje("Usuario eliminado correctamente");
+        form.reset();
+        cargarUsuarios();
+      } catch (err) {
+        console.error(err);
+        alert("Error al eliminar usuario");
+      }
+    });
+
+    // Limpiar formulario
+    document.getElementById("btnNuevo").addEventListener("click", () => form.reset());
+
+    // Inicializar
+    cargarUsuarios();
+  </script>
+</body>
+</html>
